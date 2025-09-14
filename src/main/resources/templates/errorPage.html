@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <title>Ошибка</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style>
+        .main-content {
+            margin-bottom: 100px;
+            padding-top: 50px;
+        }
+        .error-card {
+            text-align: center;
+            padding: 50px 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+        .error-icon {
+            font-size: 5rem;
+            color: #dc3545;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="general :: page-header"></div>
+
+<div class="main-content">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card error-card">
+                    <div class="card-body">
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h2 class="text-danger mb-4">Произошла ошибка</h2>
+                        <div class="alert alert-danger" th:if="${error_msg}">
+                            <p class="mb-0" th:text="${error_msg}"></p>
+                        </div>
+                        <div class="alert alert-danger" th:unless="${error_msg}">
+                            <p class="mb-0">К сожалению, произошла непредвиденная ошибка. Попробуйте повторить операцию позже.</p>
+                        </div>
+                        <div class="mt-4">
+                            <a href="/" class="btn btn-primary btn-lg mr-3">
+                                <i class="fas fa-home"></i> На главную
+                            </a>
+                            <button onclick="history.back()" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-arrow-left"></i> Назад
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Support -->
+                <div class="card mt-4">
+                    <div class="card-body text-center">
+                        <h6 class="card-title">Нужна помощь?</h6>
+                        <p class="card-text small">
+                            Если проблема повторяется, обратитесь к системному администратору или проверьте:
+                        </p>
+                        <ul class="text-left small">
+                            <li>Правильность введенных данных</li>
+                            <li>Доступность базы данных</li>
+                            <li>Корректность ссылок и параметров</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="general :: site-footer"></div>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div th:replace="general :: site-script"></div>
+
+</body>
+</html>

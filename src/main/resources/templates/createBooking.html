@@ -1,0 +1,310 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <title>Бронирование билета</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style>
+        .main-content {
+            margin-bottom: 100px;
+            padding-top: 20px;
+        }
+        .flight-info-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .booking-card {
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+        .miles-calculator {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .client-select {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="general :: page-header"></div>
+
+<div class="main-content">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <h2 class="mb-4">Бронирование билета</h2>
+
+                <!-- Flight Information Card -->
+                <div class="flight-info-card">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h5 class="mb-1" th:text="${flight.flightNumber}"></h5>
+                                    <p class="mb-0" th:text="${flight.airline.name}"></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <div>
+                                        <strong th:text="${#temporals.format(flight.departureTime, 'HH:mm')}"></strong>
+                                        <span th:text="${flight.departureAirport}"></span>
+                                        <i class="fas fa-arrow-right mx-2"></i>
+                                        <strong th:text="${#temporals.format(flight.arrivalTime, 'HH:mm')}"></strong>
+                                        <span th:text="${flight.arrivalAirport}"></span>
+                                    </div>
+                                    <small th:text="${#temporals.format(flight.departureTime, 'dd.MM.yyyy')}"></small>
+                                </div>
+                                <div class="col-md-4">
+                                    <div>
+                                        <p class="mb-0">Длительность полета:</p>
+                                        <small th:text="${T(java.time.Duration).between(flight.departureTime, flight.arrivalTime).toHours()} + 'ч ' + ${T(java.time.Duration).between(flight.departureTime, flight.arrivalTime).toMinutes() % 60} + 'м'"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-right">
+                            <h3 class="mb-2" th:text="${#numbers.formatDecimal(flight.price, 0, 'COMMA', 0, 'POINT')} + ' ₽'"></h3>
+                            <p class="mb-0">
+                                Свободных мест: <strong th:text="${flight.availableSeats}"></strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Booking Form -->
+                <div class="card booking-card">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">Оформление бронирования</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" action="/saveBooking" id="bookingForm" class="needs-validation" novalidate>
+                            <input type="hidden" name="flightId" th:value="${flight.id}">
+
+                            <!-- Client Selection -->
+                            <div class="form-group">
+                                <label for="clientId">Выберите клиента <span class="text-danger">*</span></label>
+                                <select class="form-control client-select" id="clientId" name="clientId" required>
+                                    <option value="">-- Выберите клиента --</option>
+                                    <option th:each="client : ${clients}"
+                                            th:value="${client.id}"
+                                            th:text="${client.fullName} + ' (' + ${client.email} + ') - ' + ${client.bonusMiles} + ' миль'"
+                                            th:data-miles="${client.bonusMiles}">
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Пожалуйста, выберите клиента.
+                                </div>
+                                <small class="form-text text-muted">
+                                    Если нужного клиента нет в списке, <a href="/addClient" target="_blank">добавьте его</a> сначала.
+                                </small>
+                            </div>
+
+                            <!-- Client Miles Info -->
+                            <div id="clientMilesInfo" class="alert alert-info" style="display: none;">
+                                <h6>Информация о клиенте</h6>
+                                <p class="mb-1">
+                                    Бонусные мили: <strong id="clientMilesDisplay">0</strong>
+                                    <span id="vipBadge" class="badge badge-warning ml-2" style="display: none;">
+                                        <i class="fas fa-crown"></i> VIP
+                                    </span>
+                                </p>
+                                <div id="milesPaymentOption" style="display: none;">
+                                    <div class="miles-calculator mt-3">
+                                        <h6>Оплата милями</h6>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="paidWithMiles" name="paidWithMiles" value="true">
+                                            <label class="form-check-label" for="paidWithMiles">
+                                                Использовать мили для оплаты
+                                            </label>
+                                        </div>
+                                        <div id="milesAmountSection" style="display: none;">
+                                            <div class="form-group mt-2">
+                                                <label for="milesUsed">Количество миль для списания:</label>
+                                                <input type="number" class="form-control" id="milesUsed" name="milesUsed"
+                                                       min="0" max="0" step="100" value="0">
+                                                <small class="form-text text-muted">
+                                                    1 миля = 1 рубль. Максимальная оплата милями: 50% от стоимости билета.
+                                                </small>
+                                            </div>
+                                            <div class="alert alert-warning" id="milesCalculation" style="display: none;">
+                                                <p class="mb-0">
+                                                    К доплате: <strong id="remainingAmount"></strong> ₽
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Booking Summary -->
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Итоговая стоимость</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="mb-1">Стоимость билета:</p>
+                                            <p class="mb-1" id="milesDiscount" style="display: none;">Скидка милями:</p>
+                                            <hr>
+                                            <h5 class="mb-0">К оплате:</h5>
+                                        </div>
+                                        <div class="col-md-6 text-right">
+                                            <p class="mb-1" th:text="${#numbers.formatDecimal(flight.price, 0, 'COMMA', 0, 'POINT')} + ' ₽'"></p>
+                                            <p class="mb-1 text-success" id="milesDiscountAmount" style="display: none;">-0 ₽</p>
+                                            <hr>
+                                            <h5 class="mb-0" id="finalAmount" th:text="${#numbers.formatDecimal(flight.price, 0, 'COMMA', 0, 'POINT')} + ' ₽'"></h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action buttons -->
+                            <div class="form-group text-center mt-4">
+                                <button type="submit" class="btn btn-success btn-lg mr-3">
+                                    <i class="fas fa-ticket-alt"></i>
+                                    Подтвердить бронирование
+                                </button>
+                                <a th:href="'/flight?flightId=' + ${flight.id}" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-arrow-left"></i> Назад к рейсу
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Booking Rules -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h6 class="card-title">Правила бронирования</h6>
+                        <ul class="mb-0 small">
+                            <li>Бронирование действительно в течение 24 часов</li>
+                            <li>Максимальная оплата милями составляет 50% от стоимости билета</li>
+                            <li>За каждый полет начисляются мили в размере 1% от стоимости билета</li>
+                            <li>VIP статус присваивается клиентам с 10,000+ милями</li>
+                            <li>Отмена бронирования возможна до времени вылета</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="general :: site-footer"></div>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div th:replace="general :: site-script"></div>
+
+<script th:inline="javascript">
+    const flightPrice = /*[[${flight.price}]]*/ 0;
+
+    // Form validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            const form = document.getElementById('bookingForm');
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        }, false);
+    })();
+
+    // Client selection handler
+    document.getElementById('clientId').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const clientMilesInfo = document.getElementById('clientMilesInfo');
+        const milesPaymentOption = document.getElementById('milesPaymentOption');
+
+        if (this.value) {
+            const miles = parseInt(selectedOption.getAttribute('data-miles')) || 0;
+            document.getElementById('clientMilesDisplay').textContent = miles.toLocaleString();
+
+            // Show VIP badge if applicable
+            const vipBadge = document.getElementById('vipBadge');
+            if (miles >= 10000) {
+                vipBadge.style.display = 'inline-block';
+            } else {
+                vipBadge.style.display = 'none';
+            }
+
+            clientMilesInfo.style.display = 'block';
+
+            // Show miles payment option if client has miles
+            if (miles > 0) {
+                milesPaymentOption.style.display = 'block';
+                document.getElementById('milesUsed').max = Math.min(miles, Math.floor(flightPrice * 0.5));
+            } else {
+                milesPaymentOption.style.display = 'none';
+            }
+        } else {
+            clientMilesInfo.style.display = 'none';
+        }
+    });
+
+    // Miles payment checkbox handler
+    document.getElementById('paidWithMiles').addEventListener('change', function() {
+        const milesAmountSection = document.getElementById('milesAmountSection');
+        if (this.checked) {
+            milesAmountSection.style.display = 'block';
+        } else {
+            milesAmountSection.style.display = 'none';
+            document.getElementById('milesUsed').value = 0;
+            updateTotalAmount();
+        }
+    });
+
+    // Miles amount input handler
+    document.getElementById('milesUsed').addEventListener('input', function() {
+        updateTotalAmount();
+    });
+
+    function updateTotalAmount() {
+        const milesUsed = parseInt(document.getElementById('milesUsed').value) || 0;
+        const milesDiscount = document.getElementById('milesDiscount');
+        const milesDiscountAmount = document.getElementById('milesDiscountAmount');
+        const milesCalculation = document.getElementById('milesCalculation');
+        const finalAmount = document.getElementById('finalAmount');
+        const remainingAmount = document.getElementById('remainingAmount');
+
+        if (milesUsed > 0) {
+            const discount = milesUsed;
+            const total = Math.max(0, flightPrice - discount);
+
+            milesDiscount.style.display = 'block';
+            milesDiscountAmount.style.display = 'block';
+            milesDiscountAmount.textContent = '-' + discount.toLocaleString() + ' ₽';
+
+            finalAmount.textContent = total.toLocaleString() + ' ₽';
+            remainingAmount.textContent = total.toLocaleString();
+
+            if (total > 0) {
+                milesCalculation.style.display = 'block';
+            } else {
+                milesCalculation.style.display = 'none';
+            }
+        } else {
+            milesDiscount.style.display = 'none';
+            milesDiscountAmount.style.display = 'none';
+            milesCalculation.style.display = 'none';
+            finalAmount.textContent = flightPrice.toLocaleString() + ' ₽';
+        }
+    }
+</script>
+
+</body>
+</html>

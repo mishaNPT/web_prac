@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+  <title>Результаты поиска рейсов</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <style>
+    .flight-card {
+      transition: transform 0.2s ease;
+      margin-bottom: 20px;
+    }
+    .flight-card:hover {
+      transform: translateY(-2px);
+    }
+    .price-highlight {
+      color: #007bff;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+    .airline-badge {
+      background: linear-gradient(45deg, #007bff, #0056b3);
+    }
+    .main-content {
+      margin-bottom: 100px;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div th:replace="general :: page-header"></div>
+
+<div class="main-content">
+  <div class="container">
+    <!-- Search Summary -->
+    <div class="row mb-4" th:if="${searchPerformed}">
+      <div class="col-12">
+        <div class="alert alert-info">
+          <h5>Результаты поиска</h5>
+          <p class="mb-0">
+            <strong>Маршрут:</strong> <span th:text="${departureAirport}"></span> → <span th:text="${arrivalAirport}"></span><br>
+            <strong>Дата вылета:</strong> <span th:text="${departureDate}"></span><br>
+            <strong>Найдено рейсов:</strong> <span th:text="${flights.size()}"></span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Results -->
+    <div class="row" th:if="${#lists.isEmpty(flights)}">
+      <div class="col-12">
+        <div class="alert alert-warning text-center">
+          <h4>😔 Рейсы не найдены</h4>
+          <p>По вашему запросу рейсов не найдено. Попробуйте изменить параметры поиска.</p>
+          <a href="/" class="btn btn-primary">Новый поиск</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="row" th:if="${#lists.isEmpty(flights)}">
+      <div class="col-12">
+        <div class="card flight-card" th:each="flight : ${flights}">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-md-8">
+                <div class="row">
+                  <div class="col-md-3">
+                                        <span class="badge badge-primary airline-badge mb-2"
+                                              th:text="${flight.airline.name}"></span>
+                    <h6 class="mb-0" th:text="${flight.flightNumber}"></h6>
+                  </div>
+                  <div class="col-md-9">
+                    <div class="row">
+                      <div class="col-6">
+                        <div>
+                          <strong th:text="${#temporals.format(flight.departureTime, 'HH:mm')}"></strong>
+                          <span th:text="${flight.departureAirport}" class="text-muted"></span>
+                        </div>
+                        <small class="text-muted"
+                               th:text="${#temporals.format(flight.departureTime, 'dd.MM.yyyy')}"></small>
+                      </div>
+                      <div class="col-6">
+                        <div>
+                          <strong th:text="${#temporals.format(flight.arrivalTime, 'HH:mm')}"></strong>
+                          <span th:text="${flight.arrivalAirport}" class="text-muted"></span>
+                        </div>
+                        <small class="text-muted"
+                               th:text="${#temporals.format(flight.arrivalTime, 'dd.MM.yyyy')}"></small>
+                      </div>
+                    </div>
+                    <div class="mt-2">
+                                            <span class="badge badge-success" th:if="${flight.availableSeats > 10}">
+                                                Много мест
+                                            </span>
+                      <span class="badge badge-warning" th:if="${flight.availableSeats <= 10 and flight.availableSeats > 0}">
+                                                Мало мест (<span th:text="${flight.availableSeats}"></span>)
+                                            </span>
+                      <span class="badge badge-danger" th:if="${flight.availableSeats == 0}">
+                                                Мест нет
+                                            </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 text-md-right">
+                <div class="price-highlight mb-2">
+                  <span th:text="${#numbers.formatDecimal(flight.price, 0, 'COMMA', 0, 'POINT')}"></span> ₽
+                </div>
+                <div>
+                  <a th:href="@{/flight(flightId=${flight.id})}"
+                     class="btn btn-outline-info btn-sm mr-2">Подробнее</a>
+                  <a th:href="@{/createBooking(flightId=${flight.id})}"
+                     class="btn btn-success btn-sm"
+                     th:if="${flight.availableSeats > 0}">Забронировать</a>
+                  <button class="btn btn-secondary btn-sm" disabled
+                          th:if="${flight.availableSeats == 0}">Недоступно</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back to search -->
+    <div class="row mt-4">
+      <div class="col-12 text-center">
+        <a href="/" class="btn btn-primary">🔍 Новый поиск</a>
+        <a href="/flights" class="btn btn-outline-primary ml-2">Все рейсы</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div th:replace="general :: site-footer"></div>
+<div th:replace="general :: site-script"></div>
+
+</body>
+</html>

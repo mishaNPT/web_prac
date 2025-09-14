@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <title>Система бронирования авиабилетов</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+            margin-bottom: 50px;
+        }
+        .search-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+        .feature-card {
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .indent {
+            margin-left: 30px;
+            margin-right: 30px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="general :: page-header"></div>
+
+<div class="main-content">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h1 class="display-4 mb-4">Найдите идеальный рейс</h1>
+                    <p class="lead mb-4">Система управления авиарейсами и бронированием билетов</p>
+
+                    <!-- Search Form -->
+                    <div class="search-card">
+                        <form method="post" action="/search" id="searchForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="departureAirport" class="form-label text-dark">Откуда</label>
+                                    <select class="form-control" id="departureAirport" name="departureAirport" required>
+                                        <option value="">Выберите аэропорт вылета</option>
+                                        <option value="SVO">Москва (SVO) - Шереметьево</option>
+                                        <option value="DME">Москва (DME) - Домодедово</option>
+                                        <option value="VKO">Москва (VKO) - Внуково</option>
+                                        <option value="LED">Санкт-Петербург (LED) - Пулково</option>
+                                        <option value="KZN">Казань (KZN)</option>
+                                        <option value="SVX">Екатеринбург (SVX)</option>
+                                        <option value="ROV">Ростов-на-Дону (ROV)</option>
+                                        <option value="OVB">Новосибирск (OVB)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="arrivalAirport" class="form-label text-dark">Куда</label>
+                                    <select class="form-control" id="arrivalAirport" name="arrivalAirport" required>
+                                        <option value="">Выберите аэропорт прилета</option>
+                                        <option value="SVO">Москва (SVO) - Шереметьево</option>
+                                        <option value="DME">Москва (DME) - Домодедово</option>
+                                        <option value="VKO">Москва (VKO) - Внуково</option>
+                                        <option value="LED">Санкт-Петербург (LED) - Пулково</option>
+                                        <option value="KZN">Казань (KZN)</option>
+                                        <option value="SVX">Екатеринбург (SVX)</option>
+                                        <option value="ROV">Ростов-на-Дону (ROV)</option>
+                                        <option value="OVB">Новосибирск (OVB)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mx-auto mb-3">
+                                    <label for="departureDate" class="form-label text-dark">Дата вылета</label>
+                                    <input type="date" class="form-control" id="departureDate" name="departureDate" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                🔍 Найти рейсы
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-plane text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Управление рейсами</h5>
+                        <p class="card-text">Просматривайте, добавляйте и редактируйте информацию о рейсах. Отслеживайте наличие мест и цены билетов.</p>
+                        <a href="/flights" class="btn btn-outline-primary">Все рейсы</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-users text-success" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Клиенты</h5>
+                        <p class="card-text">Управляйте базой клиентов, отслеживайте их бонусные мили и историю бронирований.</p>
+                        <a href="/clients" class="btn btn-outline-success">Все клиенты</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-ticket-alt text-warning" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Бронирования</h5>
+                        <p class="card-text">Создавайте и управляйте бронированиями билетов. Подтверждайте оплату и отслеживайте статусы.</p>
+                        <a href="/bookings" class="btn btn-outline-warning">Все бронирования</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-center mb-4">Быстрые действия</h5>
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <a href="/availableFlights" class="btn btn-info btn-block">
+                                    Доступные рейсы
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/addClient" class="btn btn-success btn-block">
+                                    Добавить клиента
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/addFlight" class="btn btn-primary btn-block">
+                                    Добавить рейс
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/vipClients" class="btn btn-warning btn-block">
+                                    VIP клиенты
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="general :: site-footer"></div>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div th:replace="general :: site-script"></div>
+
+<script>
+    // Set minimum date to today
+    document.getElementById('departureDate').min = new Date().toISOString().split('T')[0];
+
+    // Clear arrival airport when departure changes
+    document.getElementById('departureAirport').addEventListener('change', function() {
+        const arrivalSelect = document.getElementById('arrivalAirport');
+        const departureValue = this.value;
+
+        // Disable the same airport in arrival
+        Array.from(arrivalSelect.options).forEach(option => {
+            option.disabled = option.value === departureValue && option.value !== '';
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+  <title>Все рейсы</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <style>
+    .main-content {
+      margin-bottom: 100px;
+      padding-top: 20px;
+    }
+    .sort-buttons .btn {
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .table-hover tbody tr:hover {
+      background-color: rgba(0,123,255,.075);
+    }
+  </style>
+</head>
+<body>
+
+<div th:replace="general :: page-header"></div>
+
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2 th:text="${title} ?: 'Все рейсы'"></h2>
+          <a href="/addFlight" class="btn btn-success">
+            Добавить рейс
+          </a>
+        </div>
+
+        <!-- Sort buttons -->
+        <div class="sort-buttons mb-3">
+          <a th:href="@{/flights(sortBy='date')}"
+             th:class="${currentSort == 'date'} ? 'btn btn-primary' : 'btn btn-outline-primary'">
+            По дате вылета
+          </a>
+          <a th:href="@{/flights(sortBy='price')}"
+             th:class="${currentSort == 'price'} ? 'btn btn-primary' : 'btn btn-outline-primary'">
+            По цене
+          </a>
+          <a th:href="@{/flights(sortBy='route')}"
+             th:class="${currentSort == 'route'} ? 'btn btn-primary' : 'btn btn-outline-primary'">
+            По маршруту
+          </a>
+        </div>
+
+        <!-- Empty state -->
+        <div th:if="${flights.empty}" class="alert alert-info text-center">
+          <h4>Рейсы не найдены</h4>
+          <p>В базе данных пока нет рейсов.</p>
+          <a href="/addFlight" class="btn btn-primary">Добавить первый рейс</a>
+        </div>
+
+        <!-- Flights table -->
+        <div th:if="${!flights.empty}" class="table-responsive">
+          <table class="table table-hover table-striped">
+            <thead class="thead-dark">
+            <tr>
+              <th scope="col">Номер рейса</th>
+              <th scope="col">Авиакомпания</th>
+              <th scope="col">Маршрут</th>
+              <th scope="col">Дата и время вылета</th>
+              <th scope="col">Дата и время прилета</th>
+              <th scope="col">Цена</th>
+              <th scope="col">Места</th>
+              <th scope="col">Статус</th>
+              <th scope="col">Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="flight : ${flights}">
+              <td>
+                <strong th:text="${flight.flightNumber}"></strong>
+              </td>
+              <td>
+                <span class="badge badge-info" th:text="${flight.airline.name}"></span>
+              </td>
+              <td>
+                <span th:text="${flight.departureAirport}"></span>
+                <i class="fas fa-arrow-right mx-1"></i>
+                <span th:text="${flight.arrivalAirport}"></span>
+              </td>
+              <td>
+                <div th:text="${#temporals.format(flight.departureTime, 'dd.MM.yyyy')}"></div>
+                <small class="text-muted" th:text="${#temporals.format(flight.departureTime, 'HH:mm')}"></small>
+              </td>
+              <td>
+                <div th:text="${#temporals.format(flight.arrivalTime, 'dd.MM.yyyy')}"></div>
+                <small class="text-muted" th:text="${#temporals.format(flight.arrivalTime, 'HH:mm')}"></small>
+              </td>
+              <td>
+                <strong th:text="${#numbers.formatDecimal(flight.price, 0, 'COMMA', 0, 'POINT')} + ' ₽'"></strong>
+              </td>
+              <td>
+                <span th:text="${flight.availableSeats} + '/' + ${flight.totalSeats}"></span>
+              </td>
+              <td>
+                                    <span class="badge badge-success" th:if="${flight.availableSeats > 0}">
+                                        Доступен
+                                    </span>
+                <span class="badge badge-danger" th:if="${flight.availableSeats == 0}">
+                                        Мест нет
+                                    </span>
+              </td>
+              <td>
+                <div class="btn-group" role="group">
+                  <a th:href="@{/flight(flightId=${flight.id})}"
+                     class="btn btn-sm btn-outline-info" title="Подробнее">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a th:href="@{/editFlight(flightId=${flight.id})}"
+                     class="btn btn-sm btn-outline-warning" title="Редактировать">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <a th:href="@{/createBooking(flightId=${flight.id})}"
+                     class="btn btn-sm btn-outline-success"
+                     title="Забронировать"
+                     th:if="${flight.availableSeats > 0}">
+                    <i class="fas fa-ticket-alt"></i>
+                  </a>
+                  <button class="btn btn-sm btn-outline-danger"
+                          title="Удалить"
+                          data-toggle="modal"
+                          th:data-target="'#deleteModal' + ${flight.id}">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+
+                <!-- Delete Modal -->
+                <div class="modal fade" th:id="'deleteModal' + ${flight.id}" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Подтверждение удаления</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                          <span>&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <p>Вы уверены, что хотите удалить рейс
+                          <strong th:text="${flight.flightNumber}"></strong>?</p>
+                        <p class="text-danger"><small>Это действие нельзя отменить.</small></p>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                          Отмена
+                        </button>
+                        <form method="post" action="/deleteFlight" style="display: inline;">
+                          <input type="hidden" name="flightId" th:value="${flight.id}">
+                          <button type="submit" class="btn btn-danger">
+                            Удалить
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Statistics -->
+        <div th:if="${!flights.empty}" class="row mt-4">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Статистика</h5>
+                <div class="row">
+                  <div class="col-md-3">
+                    <div class="text-center">
+                      <h4 class="text-primary" th:text="${flights.size()}"></h4>
+                      <small class="text-muted">Всего рейсов</small>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="text-center">
+                      <h4 class="text-success" th:text="${#lists.size(flights.?[availableSeats > 0])}"></h4>
+                      <small class="text-muted">Доступных рейсов</small>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="text-center">
+                      <h4 class="text-info" th:text="${#aggregates.sum(flights.![totalSeats])}"></h4>
+                      <small class="text-muted">Всего мест</small>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="text-center">
+                      <h4 class="text-warning" th:text="${#aggregates.sum(flights.![availableSeats])}"></h4>
+                      <small class="text-muted">Свободных мест</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div th:replace="general :: site-footer"></div>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div th:replace="general :: site-script"></div>
+
+</body>
+</html>

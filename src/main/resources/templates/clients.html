@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <title>Клиенты</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style>
+        .main-content {
+            margin-bottom: 100px;
+            padding-top: 20px;
+        }
+        .client-card {
+            transition: transform 0.2s ease;
+            margin-bottom: 15px;
+        }
+        .client-card:hover {
+            transform: translateY(-2px);
+        }
+        .miles-badge {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="general :: page-header"></div>
+
+<div class="main-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Все клиенты</h2>
+                    <a href="/addClient" class="btn btn-success">
+                        Добавить клиента
+                    </a>
+                </div>
+
+                <!-- Search Form -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <form method="get" action="/clients">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="search"
+                                       placeholder="Поиск по имени или email..."
+                                       th:value="${searchTerm}">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-primary" type="submit">
+                                        Найти
+                                    </button>
+                                    <a href="/clients" class="btn btn-outline-secondary" th:if="${searchPerformed}">
+                                        Очистить
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Search Results Info -->
+                <div th:if="${searchPerformed}" class="alert alert-info">
+                    Результаты поиска по запросу "<strong th:text="${searchTerm}"></strong>":
+                    найдено <strong th:text="${clients.size()}"></strong> клиент(ов)
+                </div>
+
+                <!-- Empty state -->
+                <div th:if="${#lists.isEmpty(clients)}" class="alert alert-info text-center">
+                    <h4 th:if="${!searchPerformed}">Клиенты не найдены</h4>
+                    <h4 th:if="${searchPerformed}">По вашему запросу ничего не найдено</h4>
+                    <p th:if="${!searchPerformed}">В базе данных пока нет клиентов.</p>
+                    <p th:if="${searchPerformed}">Попробуйте изменить параметры поиска.</p>
+                    <a href="/addClient" class="btn btn-primary" th:if="${!searchPerformed}">
+                        Добавить первого клиента
+                    </a>
+                </div>
+
+                <!-- Clients Grid -->
+                <div th:if="${#lists.isEmpty(clients)}">
+                    <div class="row">
+                        <div class="col-lg-6 col-xl-4" th:each="client : ${clients}">
+                            <div class="card client-card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h5 class="card-title mb-0" th:text="${client.fullName}"></h5>
+                                        <span class="badge miles-badge" th:text="${client.bonusMiles} + ' миль'"></span>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <small class="text-muted">Email:</small><br>
+                                        <span th:text="${client.email}" th:if="${client.email}"></span>
+                                        <span class="text-muted" th:if="${!client.email}">Не указан</span>
+                                    </div>
+
+                                    <div class="mb-3" th:if="${client.phone}">
+                                        <small class="text-muted">Телефон:</small><br>
+                                        <span th:text="${client.phone}"></span>
+                                    </div>
+
+                                    <div class="mb-3" th:if="${client.address}">
+                                        <small class="text-muted">Адрес:</small><br>
+                                        <span th:text="${client.address}" class="text-truncate d-block"></span>
+                                    </div>
+                                </div>
+
+                                <div class="card-footer bg-transparent">
+                                    <div class="btn-group w-100" role="group">
+                                        <a th:href="@{/client(clientId=${client.id})}"
+                                           class="btn btn-outline-info btn-sm" title="Подробнее">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a th:href="@{/editClient(clientId=${client.id})}"
+                                           class="btn btn-outline-warning btn-sm" title="Редактировать">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn btn-outline-danger btn-sm"
+                                                title="Удалить"
+                                                data-toggle="modal"
+                                                th:data-target="'#deleteModal' + ${client.id}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade" th:id="'deleteModal' + ${client.id}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Подтверждение удаления</h5>
+                                                    <button type="button" class="close" data-dismiss="modal">
+                                                        <span>&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Вы уверены, что хотите удалить клиента
+                                                        <strong th:text="${client.fullName}"></strong>?</p>
+                                                    <p class="text-danger"><small>Это действие нельзя отменить. Все связанные бронирования также будут удалены.</small></p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                        Отмена
+                                                    </button>
+                                                    <form method="post" action="/deleteClient" style="display: inline;">
+                                                        <input type="hidden" name="clientId" th:value="${client.id}">
+                                                        <button type="submit" class="btn btn-danger">
+                                                            Удалить
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Статистика клиентов</h5>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <h4 class="text-primary" th:text="${clients.size()}"></h4>
+                                                <small class="text-muted">Всего клиентов</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <h4 class="text-success" th:text="${#aggregates.sum(clients.![bonusMiles])}"></h4>
+                                                <small class="text-muted">Всего миль</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <h4 class="text-info" th:text="${clients.size() > 0 ? #numbers.formatDecimal(#aggregates.avg(clients.![bonusMiles]), 0, 'COMMA', 0, 'POINT') : '0'}"></h4>
+                                                <small class="text-muted">Среднее миль</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="general :: site-footer"></div>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div th:replace="general :: site-script"></div>
+
+</body>
+</html>
