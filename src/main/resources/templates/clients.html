@@ -26,7 +26,7 @@
 </head>
 <body>
 
-<div th:replace="general :: page-header"></div>
+<div th:replace="~{general :: page-header}"></div>
 
 <div class="main-content">
     <div class="container-fluid">
@@ -46,6 +46,7 @@
                             <div class="input-group">
                                 <input type="text" class="form-control" name="search"
                                        placeholder="Поиск по имени или email..."
+                                       aria-label="Поиск по имени или email"
                                        th:value="${searchTerm}">
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-primary" type="submit">
@@ -78,7 +79,7 @@
                 </div>
 
                 <!-- Clients Grid -->
-                <div th:if="${#lists.isEmpty(clients)}">
+                <div th:if="${!#lists.isEmpty(clients)}">
                     <div class="row">
                         <div class="col-lg-6 col-xl-4" th:each="client : ${clients}">
                             <div class="card client-card h-100">
@@ -90,16 +91,16 @@
 
                                     <div class="mb-3">
                                         <small class="text-muted">Email:</small><br>
-                                        <span th:text="${client.email}" th:if="${client.email}"></span>
-                                        <span class="text-muted" th:if="${!client.email}">Не указан</span>
+                                        <span th:text="${client.email}" th:if="${client.email != null and !client.email.isEmpty()}"></span>
+                                        <span class="text-muted" th:if="${client.email == null or client.email.isEmpty()}">Не указан</span>
                                     </div>
 
-                                    <div class="mb-3" th:if="${client.phone}">
+                                    <div class="mb-3" th:if="${client.phone != null and !client.phone.isEmpty()}">
                                         <small class="text-muted">Телефон:</small><br>
                                         <span th:text="${client.phone}"></span>
                                     </div>
 
-                                    <div class="mb-3" th:if="${client.address}">
+                                    <div class="mb-3" th:if="${client.address != null and !client.address.isEmpty()}">
                                         <small class="text-muted">Адрес:</small><br>
                                         <span th:text="${client.address}" class="text-truncate d-block"></span>
                                     </div>
@@ -115,42 +116,12 @@
                                            class="btn btn-outline-warning btn-sm" title="Редактировать">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button class="btn btn-outline-danger btn-sm"
+                                        <button class="btn btn-outline-danger btn-sm delete-client-btn"
                                                 title="Удалить"
-                                                data-toggle="modal"
-                                                th:data-target="'#deleteModal' + ${client.id}">
+                                                th:data-client-id="${client.id}"
+                                                th:data-client-name="${client.fullName}">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                    </div>
-
-                                    <!-- Delete Modal -->
-                                    <div class="modal fade" th:id="'deleteModal' + ${client.id}" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Подтверждение удаления</h5>
-                                                    <button type="button" class="close" data-dismiss="modal">
-                                                        <span>&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p>Вы уверены, что хотите удалить клиента
-                                                        <strong th:text="${client.fullName}"></strong>?</p>
-                                                    <p class="text-danger"><small>Это действие нельзя отменить. Все связанные бронирования также будут удалены.</small></p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                                        Отмена
-                                                    </button>
-                                                    <form method="post" action="/deleteClient" style="display: inline;">
-                                                        <input type="hidden" name="clientId" th:value="${client.id}">
-                                                        <button type="submit" class="btn btn-danger">
-                                                            Удалить
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -193,12 +164,65 @@
     </div>
 </div>
 
-<div th:replace="general :: site-footer"></div>
+<!-- Single Delete Modal for all clients -->
+<div class="modal fade" id="deleteClientModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение удаления</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить клиента
+                    <strong id="clientNameToDelete"></strong>?</p>
+                <p class="text-danger"><small>Это действие нельзя отменить. Все связанные бронирования также будут удалены.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    Отмена
+                </button>
+                <form method="post" action="/deleteClient" style="display: inline;">
+                    <input type="hidden" name="clientId" id="clientIdToDelete">
+                    <button type="submit" class="btn btn-danger">
+                        Удалить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{general :: site-footer}"></div>
 
 <!-- Font Awesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-<div th:replace="general :: site-script"></div>
+<div th:replace="~{general :: site-script}"></div>
+
+<script>
+    // Handle delete client button clicks
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteButtons = document.querySelectorAll('.delete-client-btn');
+        const modal = document.getElementById('deleteClientModal');
+        const clientNameElement = document.getElementById('clientNameToDelete');
+        const clientIdInput = document.getElementById('clientIdToDelete');
+
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const clientId = this.getAttribute('data-client-id');
+
+                // Update modal content
+                clientNameElement.textContent =  this.getAttribute('data-client-name');
+                clientIdInput.value = clientId;
+
+                // Show modal
+                $(modal).modal('show');
+            });
+        });
+    });
+</script>
 
 </body>
 </html>

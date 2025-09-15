@@ -28,7 +28,7 @@
 </head>
 <body>
 
-<div th:replace="general :: page-header"></div>
+<div th:replace="~{general :: page-header}"></div>
 
 <div class="main-content">
   <div class="container-fluid">
@@ -66,7 +66,7 @@
         </div>
 
         <!-- Bookings Grid -->
-        <div th:if="${#lists.isEmpty(bookings)}">
+        <div th:if="${!#lists.isEmpty(bookings)}">
           <div class="row">
             <div class="col-lg-6 col-xl-4" th:each="booking : ${bookings}">
               <div class="card booking-card h-100">
@@ -76,10 +76,8 @@
                       Бронирование #<span th:text="${booking.id}"></span>
                     </h5>
                     <span class="badge status-badge"
-                          th:class="${booking.status == 'PAID'} ? 'badge-success' :
-                                                         ${booking.status == 'CANCELLED'} ? 'badge-danger' : 'badge-warning'"
-                          th:text="${booking.status == 'PAID'} ? 'Оплачен' :
-                                                         ${booking.status == 'CANCELLED'} ? 'Отменен' : 'Забронирован'"></span>
+                          th:class="${booking.status == 'PAID' ? 'badge-success' : booking.status == 'CANCELLED' ? 'badge-danger' : 'badge-warning'}"
+                          th:text="${booking.status == 'PAID' ? 'Оплачен' : booking.status == 'CANCELLED' ? 'Отменен' : 'Забронирован'}"></span>
                   </div>
 
                   <div class="mb-2">
@@ -115,9 +113,9 @@
                   </div>
 
                   <div th:if="${booking.paidWithMiles}" class="mb-2">
-                                        <span class="badge badge-info">
-                                            <i class="fas fa-star"></i> Оплачено милями: <span th:text="${booking.milesUsed}"></span>
-                                        </span>
+                    <span class="badge badge-info">
+                      <i class="fas fa-star"></i> Оплачено милями: <span th:text="${booking.milesUsed}"></span>
+                    </span>
                   </div>
                 </div>
 
@@ -127,86 +125,28 @@
                        class="btn btn-outline-info btn-sm" title="Подробнее">
                       <i class="fas fa-eye"></i>
                     </a>
-                    <button class="btn btn-outline-success btn-sm"
+                    <button class="btn btn-outline-success btn-sm confirm-booking-btn"
                             title="Подтвердить оплату"
                             th:if="${booking.status == 'BOOKED'}"
-                            data-toggle="modal"
-                            th:data-target="'#confirmModal' + ${booking.id}">
+                            th:data-booking-id="${booking.id}"
+                            th:data-booking-number="${booking.id}"
+                            th:data-client-name="${booking.client.fullName}"
+                            th:data-flight-number="${booking.flight.flightNumber}">
                       <i class="fas fa-check"></i>
                     </button>
-                    <button class="btn btn-outline-danger btn-sm"
+                    <button class="btn btn-outline-danger btn-sm cancel-booking-btn"
                             title="Отменить"
                             th:if="${booking.status != 'CANCELLED'}"
-                            data-toggle="modal"
-                            th:data-target="'#cancelModal' + ${booking.id}">
+                            th:data-booking-id="${booking.id}"
+                            th:data-booking-number="${booking.id}"
+                            th:data-client-name="${booking.client.fullName}"
+                            th:data-flight-number="${booking.flight.flightNumber}">
                       <i class="fas fa-times"></i>
                     </button>
                     <a th:href="@{/client(clientId=${booking.client.id})}"
                        class="btn btn-outline-secondary btn-sm" title="Профиль клиента">
                       <i class="fas fa-user"></i>
                     </a>
-                  </div>
-
-                  <!-- Confirm Modal -->
-                  <div class="modal fade" th:id="'confirmModal' + ${booking.id}" tabindex="-1" th:if="${booking.status == 'BOOKED'}">
-                    <div class="modal-dialog">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title">Подтверждение оплаты</h5>
-                          <button type="button" class="close" data-dismiss="modal">
-                            <span>&times;</span>
-                          </button>
-                        </div>
-                        <div class="modal-body">
-                          <p>Подтвердить оплату бронирования
-                            <strong>#<span th:text="${booking.id}"></span></strong>?</p>
-                          <p>После подтверждения клиенту будут начислены бонусные мили.</p>
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            Отмена
-                          </button>
-                          <form method="post" action="/confirmBooking" style="display: inline;">
-                            <input type="hidden" name="bookingId" th:value="${booking.id}">
-                            <button type="submit" class="btn btn-success">
-                              Подтвердить
-                            </button>
-                          </form>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Cancel Modal -->
-                  <div class="modal fade" th:id="'cancelModal' + ${booking.id}" tabindex="-1" th:if="${booking.status != 'CANCELLED'}">
-                    <div class="modal-dialog">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title">Отмена бронирования</h5>
-                          <button type="button" class="close" data-dismiss="modal">
-                            <span>&times;</span>
-                          </button>
-                        </div>
-                        <div class="modal-body">
-                          <p>Отменить бронирование
-                            <strong>#<span th:text="${booking.id}"></span></strong>?</p>
-                          <p class="text-warning">
-                            <small>Место в самолете будет освобождено. Если бронирование было оплачено милями, они будут возвращены клиенту.</small>
-                          </p>
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            Отмена
-                          </button>
-                          <form method="post" action="/cancelBooking" style="display: inline;">
-                            <input type="hidden" name="bookingId" th:value="${booking.id}">
-                            <button type="submit" class="btn btn-danger">
-                              Отменить бронирование
-                            </button>
-                          </form>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -255,12 +195,123 @@
   </div>
 </div>
 
-<div th:replace="general :: site-footer"></div>
+<!-- Single Confirm Modal for all bookings -->
+<div class="modal fade" id="confirmBookingModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Подтверждение оплаты</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Подтвердить оплату бронирования <strong id="confirmBookingNumber"></strong>?</p>
+        <p><strong>Клиент:</strong> <span id="confirmClientName"></span></p>
+        <p><strong>Рейс:</strong> <span id="confirmFlightNumber"></span></p>
+        <p class="text-info"><small>После подтверждения клиенту будут начислены бонусные мили.</small></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          Отмена
+        </button>
+        <form method="post" action="/confirmBooking" style="display: inline;">
+          <input type="hidden" name="bookingId" id="confirmBookingId">
+          <button type="submit" class="btn btn-success">
+            Подтвердить
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Single Cancel Modal for all bookings -->
+<div class="modal fade" id="cancelBookingModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Отмена бронирования</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Отменить бронирование <strong id="cancelBookingNumber"></strong>?</p>
+        <p><strong>Клиент:</strong> <span id="cancelClientName"></span></p>
+        <p><strong>Рейс:</strong> <span id="cancelFlightNumber"></span></p>
+        <p class="text-warning">
+          <small>Место в самолете будет освобождено. Если бронирование было оплачено милями, они будут возвращены клиенту.</small>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          Отмена
+        </button>
+        <form method="post" action="/cancelBooking" style="display: inline;">
+          <input type="hidden" name="bookingId" id="cancelBookingId">
+          <button type="submit" class="btn btn-danger">
+            Отменить бронирование
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div th:replace="~{general :: site-footer}"></div>
 
 <!-- Font Awesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-<div th:replace="general :: site-script"></div>
+<div th:replace="~{general :: site-script}"></div>
+
+<script>
+  // Handle confirm and cancel booking button clicks
+  document.addEventListener('DOMContentLoaded', function() {
+    const confirmButtons = document.querySelectorAll('.confirm-booking-btn');
+    const cancelButtons = document.querySelectorAll('.cancel-booking-btn');
+
+    const confirmModal = document.getElementById('confirmBookingModal');
+    const cancelModal = document.getElementById('cancelBookingModal');
+
+    confirmButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const bookingId = this.getAttribute('data-booking-id');
+        const bookingNumber = this.getAttribute('data-booking-number');
+        const clientName = this.getAttribute('data-client-name');
+        const flightNumber = this.getAttribute('data-flight-number');
+
+        // Update modal content
+        document.getElementById('confirmBookingNumber').textContent = '#' + bookingNumber;
+        document.getElementById('confirmClientName').textContent = clientName;
+        document.getElementById('confirmFlightNumber').textContent = flightNumber;
+        document.getElementById('confirmBookingId').value = bookingId;
+
+        // Show modal
+        $(confirmModal).modal('show');
+      });
+    });
+
+    cancelButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const bookingId = this.getAttribute('data-booking-id');
+        const bookingNumber = this.getAttribute('data-booking-number');
+        const clientName = this.getAttribute('data-client-name');
+        const flightNumber = this.getAttribute('data-flight-number');
+
+        // Update modal content
+        document.getElementById('cancelBookingNumber').textContent = '#' + bookingNumber;
+        document.getElementById('cancelClientName').textContent = clientName;
+        document.getElementById('cancelFlightNumber').textContent = flightNumber;
+        document.getElementById('cancelBookingId').value = bookingId;
+
+        // Show modal
+        $(cancelModal).modal('show');
+      });
+    });
+  });
+</script>
 
 </body>
 </html>

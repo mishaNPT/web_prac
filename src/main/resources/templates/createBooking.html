@@ -35,7 +35,7 @@
 </head>
 <body>
 
-<div th:replace="general :: page-header"></div>
+<div th:replace="~{general :: page-header}"></div>
 
 <div class="main-content">
     <div class="container">
@@ -199,12 +199,12 @@
     </div>
 </div>
 
-<div th:replace="general :: site-footer"></div>
+<div th:replace="~{general :: site-footer}"></div>
 
 <!-- Font Awesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-<div th:replace="general :: site-script"></div>
+<div th:replace="~{general :: site-script}"></div>
 
 <script th:inline="javascript">
     const flightPrice = /*[[${flight.price}]]*/ 0;

@@ -1,0 +1,272 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+    <title th:text="'Бронирование #' + ${booking.id}">Информация о бронировании</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style>
+        .main-content {
+            margin-bottom: 100px;
+            padding-top: 20px;
+        }
+        .booking-header {
+            background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .info-card {
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .status-display {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status-booked { background-color: #ffc107; color: #212529; }
+        .status-paid { background-color: #28a745; color: white; }
+        .status-cancelled { background-color: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{general :: page-header}"></div>
+
+<div class="main-content">
+    <div class="container">
+        <!-- Booking Header -->
+        <div class="booking-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-2">Бронирование #<span th:text="${booking.id}"></span></h2>
+                    <h4 class="mb-3">
+                        Рейс <span th:text="${booking.flight.flightNumber}"></span>
+                        (<span th:text="${booking.flight.airline.name}"></span>)
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><i class="fas fa-user mr-2"></i><strong>Клиент:</strong></p>
+                            <p class="mb-0" th:text="${booking.client.fullName}"></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><i class="fas fa-calendar mr-2"></i><strong>Дата бронирования:</strong></p>
+                            <p class="mb-0" th:text="${#temporals.format(booking.bookingDate, 'dd.MM.yyyy HH:mm')}"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div th:if="${booking.status == 'PAID'}" class="status-display status-paid">
+                        <h4 class="mb-0">Оплачено</h4>
+                    </div>
+                    <div th:if="${booking.status == 'CANCELLED'}" class="status-display status-cancelled">
+                        <h4 class="mb-0">Отменено</h4>
+                    </div>
+                    <div th:if="${booking.status != 'PAID' and booking.status != 'CANCELLED'}" class="status-display status-booked">
+                        <h4 class="mb-0">Забронировано</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="btn-toolbar justify-content-between">
+                    <div class="btn-group">
+                        <button class="btn btn-success"
+                                data-toggle="modal" data-target="#confirmModal"
+                                th:if="${booking.status == 'BOOKED'}">
+                            <i class="fas fa-check"></i> Подтвердить оплату
+                        </button>
+                        <button class="btn btn-danger"
+                                data-toggle="modal" data-target="#cancelModal"
+                                th:if="${booking.status != 'CANCELLED'}">
+                            <i class="fas fa-times"></i> Отменить
+                        </button>
+                    </div>
+                    <div class="btn-group">
+                        <a th:href="@{/client(clientId=${booking.client.id})}" class="btn btn-info">
+                            <i class="fas fa-user"></i> Профиль клиента
+                        </a>
+                        <a th:href="@{/flight(flightId=${booking.flight.id})}" class="btn btn-primary">
+                            <i class="fas fa-plane"></i> Информация о рейсе
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Details -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card info-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-plane mr-2"></i>Информация о рейсе</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Номер рейса:</strong></div>
+                            <div class="col-sm-8" th:text="${booking.flight.flightNumber}"></div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Авиакомпания:</strong></div>
+                            <div class="col-sm-8" th:text="${booking.flight.airline.name}"></div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Маршрут:</strong></div>
+                            <div class="col-sm-8" th:text="${booking.flight.departureAirport} + ' → ' + ${booking.flight.arrivalAirport}"></div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Вылет:</strong></div>
+                            <div class="col-sm-8" th:text="${#temporals.format(booking.flight.departureTime, 'dd.MM.yyyy HH:mm')}"></div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Прилет:</strong></div>
+                            <div class="col-sm-8" th:text="${#temporals.format(booking.flight.arrivalTime, 'dd.MM.yyyy HH:mm')}"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Стоимость:</strong></div>
+                            <div class="col-sm-8">
+                                <span class="h5 text-success" th:text="${#numbers.formatDecimal(booking.flight.price, 0, 'COMMA', 0, 'POINT')} + ' ₽'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card info-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-user mr-2"></i>Информация о клиенте</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>ФИО:</strong></div>
+                            <div class="col-sm-8" th:text="${booking.client.fullName}"></div>
+                        </div>
+                        <div class="row mb-3" th:if="${booking.client.email != null and !booking.client.email.isEmpty()}">
+                            <div class="col-sm-4"><strong>Email:</strong></div>
+                            <div class="col-sm-8" th:text="${booking.client.email}"></div>
+                        </div>
+                        <div class="row mb-3" th:if="${booking.client.phone != null and !booking.client.phone.isEmpty()}">
+                            <div class="col-sm-4"><strong>Телефон:</strong></div>
+                            <div class="col-sm-8" th:text="${booking.client.phone}"></div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Бонусные мили:</strong></div>
+                            <div class="col-sm-8">
+                                <span class="badge badge-info" th:text="${booking.client.bonusMiles}"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Details -->
+        <div class="row" th:if="${booking.paidWithMiles}">
+            <div class="col-12">
+                <div class="card info-card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-star mr-2"></i>Оплата милями</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Использовано миль:</strong>
+                                <span class="h5 text-warning" th:text="${booking.milesUsed}"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Стоимость билета:</strong>
+                                <span th:text="${#numbers.formatDecimal(booking.flight.price, 0, 'COMMA', 0, 'POINT')} + ' ₽'"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>К доплате:</strong>
+                                <span class="h5 text-success" th:text="${#numbers.formatDecimal(booking.flight.price - booking.milesUsed, 0, 'COMMA', 0, 'POINT')} + ' ₽'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <a href="/bookings" class="btn btn-outline-primary mr-2">
+                    <i class="fas fa-arrow-left"></i> К списку бронирований
+                </a>
+                <a th:href="@{/client(clientId=${booking.client.id})}" class="btn btn-outline-info">
+                    <i class="fas fa-user"></i> Профиль клиента
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Payment Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" th:if="${booking.status == 'BOOKED'}">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение оплаты</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Подтвердить оплату бронирования <strong>#<span th:text="${booking.id}"></span></strong>?</p>
+                <p>После подтверждения клиенту будут начислены бонусные мили.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <form method="post" action="/confirmBooking" style="display: inline;">
+                    <input type="hidden" name="bookingId" th:value="${booking.id}">
+                    <button type="submit" class="btn btn-success">Подтвердить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Booking Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" th:if="${booking.status != 'CANCELLED'}">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Отмена бронирования</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Отменить бронирование <strong>#<span th:text="${booking.id}"></span></strong>?</p>
+                <p class="text-warning">
+                    <small>Место в самолете будет освобождено. Если бронирование было оплачено милями, они будут возвращены клиенту.</small>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <form method="post" action="/cancelBooking" style="display: inline;">
+                    <input type="hidden" name="bookingId" th:value="${booking.id}">
+                    <button type="submit" class="btn btn-danger">Отменить бронирование</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{general :: site-footer}"></div>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div th:replace="~{general :: site-script}"></div>
+
+</body>
+</html>

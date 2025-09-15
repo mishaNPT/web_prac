@@ -24,7 +24,7 @@
 </head>
 <body>
 
-<div th:replace="general :: page-header"></div>
+<div th:replace="~{general :: page-header}"></div>
 
 <div class="main-content">
   <div class="container">
@@ -66,7 +66,7 @@
                       <option th:each="airline : ${airlines}"
                               th:value="${airline.id}"
                               th:text="${airline.name}"
-                              th:selected="${flight.airline != null && flight.airline.id == airline.id}">
+                              th:selected="${flight.airline != null and flight.airline.id == airline.id}">
                       </option>
                     </select>
                     <div class="invalid-feedback">
@@ -136,7 +136,7 @@
                   <div class="form-group">
                     <label for="departureTime">Дата и время вылета <span class="required">*</span></label>
                     <input type="datetime-local" class="form-control" id="departureTime" name="departureTime"
-                           th:value="${flight.departureTime != null ? #temporals.format(flight.departureTime, 'yyyy-MM-dd\'T\'HH:mm') : ''}"
+                           th:value="${flight.departureTime != null ? flight.departureTime.toString().substring(0,16) : ''}"
                            required>
                     <div class="invalid-feedback">
                       Пожалуйста, выберите дату и время вылета.
@@ -147,7 +147,7 @@
                   <div class="form-group">
                     <label for="arrivalTime">Дата и время прилета <span class="required">*</span></label>
                     <input type="datetime-local" class="form-control" id="arrivalTime" name="arrivalTime"
-                           th:value="${flight.arrivalTime != null ? #temporals.format(flight.arrivalTime, 'yyyy-MM-dd\'T\'HH:mm') : ''}"
+                           th:value="${flight.arrivalTime != null ? flight.arrivalTime.toString().substring(0,16) : ''}"
                            required>
                     <div class="invalid-feedback">
                       Пожалуйста, выберите дату и время прилета.
@@ -232,26 +232,28 @@
   </div>
 </div>
 
-<div th:replace="general :: site-footer"></div>
+<div th:replace="~{general :: site-footer}"></div>
 
 <!-- Font Awesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-<div th:replace="general :: site-script"></div>
+<div th:replace="~{general :: site-script}"></div>
 
 <script>
   // Form validation
   (function() {
     'use strict';
     window.addEventListener('load', function() {
-      var form = document.getElementById('flightForm');
-      form.addEventListener('submit', function(event) {
-        if (form.checkValidity() === false) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        form.classList.add('was-validated');
-      }, false);
+      const forms = document.getElementsByClassName('needs-validation');
+      const validation = Array.prototype.filter.call(forms, function(form) {
+        form.addEventListener('submit', function(event) {
+          if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        }, false);
+      });
     }, false);
   })();
 

@@ -58,9 +58,10 @@ public class HibernateDatabaseConfig {
     private Properties hibernateProperties() {
         Properties properties = new Properties();
         properties.setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
-        properties.setProperty("hibernate.hbm2ddl.auto", "update");
+        properties.setProperty("hibernate.hbm2ddl.auto", "none");
         properties.setProperty("hibernate.show_sql", "true");
         properties.setProperty("hibernate.format_sql", "true");
+        properties.setProperty("hibernate.default_schema", "web_prac");
         return properties;
     }
 
