@@ -104,17 +104,11 @@
                        th:value="${client.bonusMiles}" min="0" max="1000000"
                        placeholder="0">
                 <small class="form-text text-muted">
-                  Текущее количество бонусных миль клиента. VIP статус при 10,000+ милях.
+                  Текущее количество бонусных миль клиента.
                 </small>
                 <div class="invalid-feedback">
                   Количество миль должно быть неотрицательным числом.
                 </div>
-              </div>
-
-              <!-- Preview VIP status -->
-              <div id="vipPreview" class="alert alert-warning" style="display: none;">
-                <i class="fas fa-crown"></i>
-                <strong>VIP статус</strong> - клиент получит VIP статус с этим количеством миль!
               </div>
 
               <!-- Action buttons -->
@@ -139,7 +133,6 @@
             <ul class="mb-0 small">
               <li>Поля, отмеченные звездочкой (<span class="required">*</span>), обязательны для заполнения</li>
               <li>Email должен быть уникальным в системе</li>
-              <li>VIP статус автоматически присваивается клиентам с 10,000+ бонусными милями</li>
               <li>Телефон может быть в любом формате</li>
             </ul>
           </div>
@@ -187,26 +180,6 @@
               value.slice(6, 9) + '-' + value.slice(9, 11) + '-' + value.slice(11, 13);
     }
     e.target.value = value;
-  });
-
-  // VIP status preview
-  document.getElementById('bonusMiles').addEventListener('input', function(e) {
-    const miles = parseInt(e.target.value) || 0;
-    const vipPreview = document.getElementById('vipPreview');
-
-    if (miles >= 10000) {
-      vipPreview.style.display = 'block';
-    } else {
-      vipPreview.style.display = 'none';
-    }
-  });
-
-  // Trigger VIP preview on page load
-  document.addEventListener('DOMContentLoaded', function() {
-    const milesInput = document.getElementById('bonusMiles');
-    if (milesInput.value) {
-      milesInput.dispatchEvent(new Event('input'));
-    }
   });
 </script>
 

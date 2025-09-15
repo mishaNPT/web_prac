@@ -112,9 +112,6 @@
                                 <h6>Информация о клиенте</h6>
                                 <p class="mb-1">
                                     Бонусные мили: <strong id="clientMilesDisplay">0</strong>
-                                    <span id="vipBadge" class="badge badge-warning ml-2" style="display: none;">
-                                        <i class="fas fa-crown"></i> VIP
-                                    </span>
                                 </p>
                                 <div id="milesPaymentOption" style="display: none;">
                                     <div class="miles-calculator mt-3">
@@ -189,7 +186,6 @@
                             <li>Бронирование действительно в течение 24 часов</li>
                             <li>Максимальная оплата милями составляет 50% от стоимости билета</li>
                             <li>За каждый полет начисляются мили в размере 1% от стоимости билета</li>
-                            <li>VIP статус присваивается клиентам с 10,000+ милями</li>
                             <li>Отмена бронирования возможна до времени вылета</li>
                         </ul>
                     </div>
@@ -233,14 +229,6 @@
         if (this.value) {
             const miles = parseInt(selectedOption.getAttribute('data-miles')) || 0;
             document.getElementById('clientMilesDisplay').textContent = miles.toLocaleString();
-
-            // Show VIP badge if applicable
-            const vipBadge = document.getElementById('vipBadge');
-            if (miles >= 10000) {
-                vipBadge.style.display = 'inline-block';
-            } else {
-                vipBadge.style.display = 'none';
-            }
 
             clientMilesInfo.style.display = 'block';
 
